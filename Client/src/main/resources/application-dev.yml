@@ -1,0 +1,32 @@
+# 服务器配置
+server:
+  # 服务器的HTTP端口，默认为8080
+  port: 8081
+  servlet:
+    # 应用的访问路径
+    context-path: /client
+
+# Spring配置
+spring:
+  # rabbitmq配置
+  rabbitmq:
+    host: 47.105.71.238
+    port: 5672
+    username: admin
+    password: admin
+    #虚拟host，类似于数据库的数据库名
+    virtual-host: my_vhost
+    # 是否返回回调
+    publisher-returns: true
+    listener:
+      simple:
+        #应答模式 手动(manual) 自动(auto)
+        acknowledge-mode: manual
+
+# 日志配置
+logging:
+  level:
+    com.wyt.test: debug
+    org.springframework: error
+  file:
+    path: D:/log/rabbitmq/client
