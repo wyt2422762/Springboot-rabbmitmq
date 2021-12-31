@@ -16,12 +16,15 @@ spring:
     password: admin
     #虚拟host，类似于数据库的数据库名
     virtual-host: my_vhost
-    # 是否返回回调
+    #消息return
     publisher-returns: true
+    #消息confirm
+    publisher-confirm-type: correlated
     listener:
       simple:
         # 手动应答
         acknowledge-mode: manual
+
 # 日志配置
 logging:
   level:

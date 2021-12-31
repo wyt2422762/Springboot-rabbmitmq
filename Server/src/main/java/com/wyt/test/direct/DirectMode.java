@@ -1,9 +1,8 @@
 package com.wyt.test.direct;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -30,23 +29,57 @@ public class DirectMode {
         Connection connection = factory.newConnection();
         //建立通道
         Channel channel = connection.createChannel();
+        //开启消息confirm
+        channel.confirmSelect();
+        //消息confirm listener
+        channel.addConfirmListener(new ConfirmListener() {
+            //消息发功成功
+            @Override
+            public void handleAck(long deliveryTag, boolean multiple) {
+                System.out.println("消息发送成功");
+            }
+
+            //消息发功失败
+            @Override
+            public void handleNack(long deliveryTag, boolean multiple) {
+                System.out.println("消息发送失败");
+            }
+        });
+        //消息return listener
+        channel.addReturnListener(new ReturnListener() {
+            @Override
+            public void handleReturn(int replyCode, String replyText, String exchange, String routingKey, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                System.out.println("消息被退回");
+                System.out.println("replyCode = " + replyCode);
+                System.out.println("replyText = " + replyText);
+                System.out.println("exchange = " + exchange);
+                System.out.println("routingKey = " + routingKey);
+                System.out.println("msg = " + new String(body));
+            }
+        });
 
         Scanner sc = new Scanner(System.in);
         // hasNextLine()方法判断当前是否有输入，当键盘有输入后执行循环
-        while(sc.hasNextLine()) {
+        while (sc.hasNextLine()) {
             //读取字符串型输入
             String msg = sc.nextLine();
 
-            /**
-             * 发送消息
-             * 参数一：交换机名称
-             * 参数二：发往消息的队列名称
-             * 参数三：传递消息的额外设置 eg：MessageProperties.PERSISTENT_TEXT_PLAIN 消息持久化  前提是队列持久化
-             * 参数四：消息的具体内容  字节类型
+            /*
+             * exchange：交换机名称
+             * routingKey：路由键
+             * props：消息属性字段，比如消息头部信息等等
+             * mandatory：当mandatory标志位设置为true时，
+               如果exchange根据自身类型和消息routingKey无法找到一个合适的queue存储消息，
+               那么broker会调用basic.return方法将消息返还给生产者;
+               当mandatory设置为false时，出现上述情况broker会直接将消息丢弃;
+               通俗的讲，mandatory标志告诉broker代理服务器至少将消息route到一个队列中，否则就将消息return给发送者;
+               默认false;
+             * body：消息主体部分
              */
-            channel.basicPublish("", QUEUE_NAME, null, msg.getBytes());
+            //channel.basicPublish("amq.direct", QUEUE_NAME, null, msg.getBytes());
+            channel.basicPublish("amq.direct", QUEUE_NAME, true, null, msg.getBytes());
 
-            System.out.println("消息发送完毕");
+            //System.out.println("消息发送完毕");
         }
     }
 
